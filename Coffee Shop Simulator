@@ -1,0 +1,101 @@
+import java.util.Scanner;
+
+// Интерфейс, представляющий кофе
+interface Coffee {
+    double getCost(); // Метод для получения стоимости кофе
+    String getDescription(); // Метод для получения описания кофе
+}
+
+// Классы конкретных видов кофе
+class Espresso implements Coffee {
+    public double getCost() { return 700; }
+    public String getDescription() { return "Эспрессо"; }
+}
+
+class Cappuccino implements Coffee {
+    public double getCost() { return 1200; }
+    public String getDescription() { return "Капучино"; }
+}
+
+class Latte implements Coffee {
+    public double getCost() { return 1000; }
+    public String getDescription() { return "Латте"; }
+}
+
+class Americano implements Coffee {
+    public double getCost() { return 800; }
+    public String getDescription() { return "Американо"; }
+}
+
+// Фабрика для создания объектов кофе
+class CoffeeFactory {
+    public static Coffee createCoffee(String type) {
+        return switch (type.toLowerCase()) {
+            case "espresso" -> new Espresso();
+            case "cappuccino" -> new Cappuccino();
+            case "latte" -> new Latte();
+            case "americano" -> new Americano();
+            default -> throw new IllegalArgumentException("Неизвестный тип кофе");
+        };
+    }
+}
+
+// Абстрактный класс-декоратор для добавок к кофе
+abstract class CoffeeDecorator implements Coffee {
+    protected Coffee decoratedCoffee;
+    public CoffeeDecorator(Coffee coffee) { this.decoratedCoffee = coffee; }
+    public double getCost() { return decoratedCoffee.getCost(); }
+    public String getDescription() { return decoratedCoffee.getDescription(); }
+}
+
+// Различные добавки к кофе
+class MilkDecorator extends CoffeeDecorator {
+    public MilkDecorator(Coffee coffee) { super(coffee); }
+    public double getCost() { return decoratedCoffee.getCost() + 200; }
+    public String getDescription() { return decoratedCoffee.getDescription() + ", молоко"; }
+}
+
+class CaramelDecorator extends CoffeeDecorator {
+    public CaramelDecorator(Coffee coffee) { super(coffee); }
+    public double getCost() { return decoratedCoffee.getCost() + 300; }
+    public String getDescription() { return decoratedCoffee.getDescription() + ", карамель"; }
+}
+
+class WhippedCreamDecorator extends CoffeeDecorator {
+    public WhippedCreamDecorator(Coffee coffee) { super(coffee); }
+    public double getCost() { return decoratedCoffee.getCost() + 250; }
+    public String getDescription() { return decoratedCoffee.getDescription() + ", взбитые сливки"; }
+}
+
+class ChocolateDecorator extends CoffeeDecorator {
+    public ChocolateDecorator(Coffee coffee) { super(coffee); }
+    public double getCost() { return decoratedCoffee.getCost() + 350; }
+    public String getDescription() { return decoratedCoffee.getDescription() + ", шоколадный сироп"; }
+}
+
+// Основной класс программы
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Запрос выбора кофе
+        System.out.println("Выберите кофе (espresso, cappuccino, latte, americano):");
+        Coffee coffee = CoffeeFactory.createCoffee(scanner.nextLine());
+
+        // Запрос добавок
+        System.out.println("Добавить молоко? (y/n):");
+        if (scanner.nextLine().equals("y")) coffee = new MilkDecorator(coffee);
+
+        System.out.println("Добавить карамель? (y/n):");
+        if (scanner.nextLine().equals("y")) coffee = new CaramelDecorator(coffee);
+
+        System.out.println("Добавить взбитые сливки? (y/n):");
+        if (scanner.nextLine().equals("y")) coffee = new WhippedCreamDecorator(coffee);
+
+        System.out.println("Добавить шоколадный сироп? (y/n):");
+        if (scanner.nextLine().equals("y")) coffee = new ChocolateDecorator(coffee);
+
+        // Вывод окончательного заказа
+        System.out.printf("Ваш заказ: %s - %.2f KZT%n", coffee.getDescription(), coffee.getCost());
+    }
+}
