@@ -1,0 +1,131 @@
+import java.util.*;
+
+// Класс для представления транзакции
+class Transaction {
+    private String paymentType;
+    private double amount;
+    private String status;
+
+    public Transaction(String paymentType, double amount, String status) {
+        this.paymentType = paymentType;
+        this.amount = amount;
+        this.status = status;
+    }
+
+    @Override
+    public String toString() {
+        return "Транзакция: " + paymentType + ", сумма: " + amount + ", статус: " + status;
+    }
+}
+
+// Класс для управления логом транзакций
+class TransactionLog {
+    private List<Transaction> transactions = new ArrayList<>();
+
+    public void addTransaction(String paymentType, double amount, String status) {
+        transactions.add(new Transaction(paymentType, amount, status));
+    }
+
+    public void showHistory() {
+        System.out.println("История транзакций:");
+        for (Transaction t : transactions) {
+            System.out.println(t);
+        }
+    }
+}
+
+// Интерфейс платежного метода
+interface PaymentMethod {
+    void processPayment(double amount, TransactionLog log);
+}
+
+// Реализации различных платежных методов
+class CreditCardPayment implements PaymentMethod {
+    @Override
+    public void processPayment(double amount, TransactionLog log) {
+        if (amount > 500) {
+            System.out.println("Ошибка: недостаточно средств на кредитной карте.");
+            log.addTransaction("CreditCard", amount, "failed");
+        } else {
+            System.out.println("Оплата " + amount + " через Кредитную карту.");
+            log.addTransaction("CreditCard", amount, "completed");
+        }
+    }
+}
+
+class PayPalPayment implements PaymentMethod {
+    @Override
+    public void processPayment(double amount, TransactionLog log) {
+        System.out.println("Оплата " + amount + " через PayPal.");
+        log.addTransaction("PayPal", amount, "completed");
+    }
+}
+
+class CryptoPayment implements PaymentMethod {
+    @Override
+    public void processPayment(double amount, TransactionLog log) {
+        System.out.println("Оплата " + amount + " через Криптовалюту.");
+        log.addTransaction("Crypto", amount, "completed");
+    }
+}
+
+// Фабрика платежных методов
+class PaymentFactory {
+    public static PaymentMethod getPaymentMethod(String type) {
+        return switch (type.toLowerCase()) {
+            case "creditcard" -> new CreditCardPayment();
+            case "paypal" -> new PayPalPayment();
+            case "crypto" -> new CryptoPayment();
+            default -> throw new IllegalArgumentException("Неизвестный платежный метод: " + type);
+        };
+    }
+}
+
+// Адаптер для интеграции сторонней платежной системы
+class ExternalPaymentAPI {
+    public void makeTransaction(String details, double amount) {
+        System.out.println("Внешний сервис обработал платеж: " + details + " на сумму " + amount);
+    }
+}
+
+class PaymentAdapter implements PaymentMethod {
+    private ExternalPaymentAPI externalAPI;
+    private String details;
+
+    public PaymentAdapter(String details) {
+        this.externalAPI = new ExternalPaymentAPI();
+        this.details = details;
+    }
+
+    @Override
+    public void processPayment(double amount, TransactionLog log) {
+        externalAPI.makeTransaction(details, amount);
+        log.addTransaction(details, amount, "completed");
+    }
+}
+
+// Демонстрация работы
+public class Main {
+    public static void main(String[] args) {
+        TransactionLog log = new TransactionLog();
+        List<PaymentMethod> payments = new ArrayList<>();
+
+        // Добавляем методы оплаты через фабрику и адаптер
+        payments.add(PaymentFactory.getPaymentMethod("creditcard"));
+        payments.add(PaymentFactory.getPaymentMethod("paypal"));
+        payments.add(PaymentFactory.getPaymentMethod("crypto"));
+        payments.add(new PaymentAdapter("Apple Pay"));
+
+        // Выполняем платежи
+        for (PaymentMethod payment : payments) {
+            payment.processPayment(100.0, log);
+        }
+
+        // Проверяем обработку ошибки (платеж больше 500)
+        PaymentMethod creditCard = PaymentFactory.getPaymentMethod("creditcard");
+        creditCard.processPayment(600.0, log);
+
+        // Показываем историю транзакций
+        log.showHistory();
+    }
+}
